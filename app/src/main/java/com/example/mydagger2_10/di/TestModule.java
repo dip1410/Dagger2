@@ -15,7 +15,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 @Module
 public abstract class TestModule {
-    public static final String BASE_URL = "https://jsonplaceholder.typicode.com";
+    public static final String BASE_URL = "https://restcountries.eu/rest/v2/";
 
     @Singleton
     @Provides

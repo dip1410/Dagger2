@@ -2,6 +2,8 @@ package com.example.mydagger2_10;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.example.mydagger2_10.model.Country;
@@ -30,12 +32,15 @@ public class AuthActivity extends DaggerAppCompatActivity {
     @Inject
     AuthApi authapi;
 
+    ListView listView;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth);
         Log.d(TAG,rt.toString()+"-"+authapi.toString());
-
+        listView = (ListView) findViewById(R.id.listViewCountries);
         getCountries(authapi);
     }
 
@@ -47,6 +52,8 @@ public class AuthActivity extends DaggerAppCompatActivity {
         call.enqueue(new Callback<List<Country>>() {
             @Override
             public void onResponse(Call<List<Country>> call, Response<List<Country>> response) {
+
+                Log.d(TAG,response.body().toString());
                 List<Country> countryList = response.body();
 
                 // Creating an String array for the ListView
@@ -60,7 +67,7 @@ public class AuthActivity extends DaggerAppCompatActivity {
                 }
 
                 // displaying the string array into listview
-             //   listView.setAdapter(new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, countries));
+                listView.setAdapter(new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, countries));
             }
 
             @Override

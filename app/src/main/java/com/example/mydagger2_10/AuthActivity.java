@@ -15,6 +15,9 @@ import java.util.List;
 import javax.inject.Inject;
 
 import dagger.android.support.DaggerAppCompatActivity;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -29,8 +32,8 @@ public class AuthActivity extends DaggerAppCompatActivity {
     @Inject
     Retrofit rt;
 
-    @Inject
-    AuthApi authapi;
+//    @Inject
+//    AuthApi authapi;
 
     ListView listView;
 
@@ -39,41 +42,41 @@ public class AuthActivity extends DaggerAppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth);
-        Log.d(TAG,rt.toString()+"-"+authapi.toString());
+        //    Log.d(TAG,rt.toString()+"-"+authapi.toString());
+        AuthApi authapi = rt.create(AuthApi.class);
+        Toast.makeText(this, authapi.toString(), Toast.LENGTH_SHORT).show();
         listView = (ListView) findViewById(R.id.listViewCountries);
         getCountries(authapi);
     }
 
     private void getCountries(AuthApi api) {
-    //    Api api = retrofit.create(Api.class);
+        //    Api api = retrofit.create(Api.class);
+        Observable<List<Country>> countryObservable = api.getCountries();
+        countryObservable.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread())
+                .map(result -> Observable.fromIterable(result))
+                .flatMap(x -> x).filter(y -> {
+            return true;
+        }).toList().toObservable()
+                .subscribe(this::handleResults, this::handleError);
+    }
 
-        // Call<List<Country>> call = RetrofitClient.getInstance().getMyApi().getCountries();
-        Call<List<Country>> call = api.getCountries();
-        call.enqueue(new Callback<List<Country>>() {
-            @Override
-            public void onResponse(Call<List<Country>> call, Response<List<Country>> response) {
-
-                Log.d(TAG,response.body().toString());
-                List<Country> countryList = response.body();
-
-                // Creating an String array for the ListView
-                String[] countries = new String[countryList.size()];
-
-                // looping through all the countries and inserting
-                // the names inside the string array
-                for (int i = 0; i < countryList.size(); i++) {
-                    countries[i] = countryList.get(i).getName();
-                    Log.d(TAG,countries[i].toString());
-                }
-
-                // displaying the string array into listview
-                listView.setAdapter(new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, countries));
+    private void handleResults(List<Country> countryList) {
+        String[] countries = new String[countryList.size()];
+        if (countryList != null && countryList.size() != 0) {
+            for (int i = 0; i < countryList.size(); i++) {
+                countries[i] = countryList.get(i).getName();
+                Log.d(TAG, countries[i]);
             }
+            //displaying the string array into listview
+            listView.setAdapter(new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, countries));
+        } else {
+            Toast.makeText(this, "NO RESULTS FOUND",
+                    Toast.LENGTH_LONG).show();
+        }
+    }
 
-            @Override
-            public void onFailure(Call<List<Country>> call, Throwable t) {
-                Toast.makeText(getApplicationContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+    private void handleError(Throwable t) {
+        Toast.makeText(this, "ERROR IN FETCHING API RESPONSE. Try again",
+                Toast.LENGTH_LONG).show();
     }
 }

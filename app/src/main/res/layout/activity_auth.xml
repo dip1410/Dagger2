@@ -10,7 +10,21 @@
     <ListView
         android:id="@+id/listViewCountries"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-       />
+        android:layout_height="400dp">
+
+
+    </ListView>
+    <ProgressBar
+        android:id="@+id/pr"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:visibility="visible" />
+    <Button
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/listViewCountries"
+            android:id="@+id/btn"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+
 
 </RelativeLayout>

@@ -2,8 +2,10 @@ package com.example.mydagger2_10;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.mydagger2_10.model.Country;
@@ -39,7 +41,7 @@ public class AuthActivity extends DaggerAppCompatActivity {
 //    AuthApi authapi;
 
     ListView listView;
-
+    ProgressBar pr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,46 +51,70 @@ public class AuthActivity extends DaggerAppCompatActivity {
         AuthApi authapi = rt.create(AuthApi.class);
         Toast.makeText(this, authapi.toString(), Toast.LENGTH_SHORT).show();
         listView = (ListView) findViewById(R.id.listViewCountries);
+        pr = (ProgressBar) findViewById(R.id.pr);
         getCountries(authapi);
     }
 
     private void getCountries(AuthApi api) {
         //    Api api = retrofit.create(Api.class);
         Observable<List<Country>> countryObservable = api.getCountries();
-        countryObservable.subscribeOn(Schedulers.io())//Asynchronously subscribes Observable to perform action in I/O Thread.
-                .observeOn(AndroidSchedulers.mainThread()) // To perform its emissions and response on UiThread(or)MainThread.
-                .subscribe(new Observer<List<Country>>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
 
-                    }
-                    @Override
-                    public void onNext(List<Country> countryList) {
-                        String[] countries = new String[countryList.size()];
-                        if (countryList != null && countryList.size() != 0) {
-                            for (int i = 0; i < countryList.size(); i++) {
-                                countries[i] = countryList.get(i).getName();
-                                Log.d(TAG, countries[i]);
+        Disposable disposable=countryObservable.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe(s->pr.setVisibility(View.VISIBLE))
+                .doOnTerminate(() ->pr.setVisibility(View.GONE))
+                .subscribe(response -> {
+                            String[] countries = new String[response.size()];
+                            if (response != null && response.size() != 0) {
+                                for (int i = 0; i < response.size(); i++) {
+                                    countries[i] = response.get(i).getName();
+                                    Log.d(TAG, countries[i]);
+                                }
+                                //displaying the string array into listview
+                                listView.setAdapter(new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, countries));
                             }
-                            //displaying the string array into listview
-                            listView.setAdapter(new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, countries));
-                        } else {
-                            Toast.makeText(getApplicationContext(), "NO RESULTS FOUND",
-                                    Toast.LENGTH_LONG).show();
-                        }
-                    }
+                },error->{
 
-                    @Override
-                    public void onError(Throwable e) {
-                        Log.e(TAG, e.getMessage());
-                        e.printStackTrace(); // Just to see complete log information. we can comment if not necessary!
-                    }
+                        });
 
-                    @Override
-                    public void onComplete() {
-                        Log.e(TAG, "The service Observable has ended!");
-                    }
-                });
+
+//        countryObservable.subscribeOn(Schedulers.io())//Asynchronously subscribes Observable to perform action in I/O Thread.
+//                .observeOn(AndroidSchedulers.mainThread()) // To perform its emissions and response on UiThread(or)MainThread.
+//                .subscribe(new Observer<List<Country>>() {
+//                    @Override
+//                    public void onSubscribe(Disposable d) {
+//                    pr.setVisibility(View.VISIBLE);
+//                    }
+//
+//                    @Override
+//                    public void onNext(List<Country> countryList) {
+//                        String[] countries = new String[countryList.size()];
+//                        if (countryList != null && countryList.size() != 0) {
+//                            for (int i = 0; i < countryList.size(); i++) {
+//                                countries[i] = countryList.get(i).getName();
+//                                Log.d(TAG, countries[i]);
+//                            }
+//                            //displaying the string array into listview
+//                            listView.setAdapter(new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, countries));
+//                        } else {
+//                            Toast.makeText(getApplicationContext(), "NO RESULTS FOUND",
+//                                    Toast.LENGTH_LONG).show();
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void onError(Throwable e) {
+//                        Log.e(TAG, e.getMessage());
+//                        e.printStackTrace(); // Just to see complete log information. we can comment if not necessary!
+//                    }
+//
+//                    @Override
+//                    public void onComplete() {
+//                        Log.e(TAG, "The service Observable has ended!");
+//                        pr.setVisibility(View.GONE);
+//
+//                    }
+//                });
 
 //        countryObservable.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread())
 //                .map(result -> Observable.fromIterable(result))
